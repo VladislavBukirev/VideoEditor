@@ -90,11 +90,15 @@ class Window(QWidget):
         self.insertImageBtn = QPushButton('Insert Image')
         self.insertImageBtn.clicked.connect(self.insert_image)
 
+        self.concatenateBtn = QPushButton('Concatenate Fragments')
+        self.concatenateBtn.clicked.connect(self.concatenate_fragments)
+
         # create hbox layout for video editing buttons
         editButtonsLayout = QHBoxLayout()
         editButtonsLayout.addWidget(self.changeSpeedBtn)
         editButtonsLayout.addWidget(self.cutFragmentBtn)
         editButtonsLayout.addWidget(self.insertImageBtn)
+        editButtonsLayout.addWidget(self.concatenateBtn)
 
         # create hbox layout
         hboxLayout = QHBoxLayout()
@@ -209,6 +213,26 @@ class Window(QWidget):
                 self.slider.setRange(0, self.mediaPlayer.duration())
                 self.slider.setValue(0)
                 self.label.setText("")
+
+
+    def concatenate_fragments(self):
+        # Get fragment files from the user
+        fragment_files, _ = QFileDialog.getOpenFileNames(self, "Concatenate Fragments", "", "Video Files (*.mp4)")
+
+        if len(fragment_files) > 0:
+            # Concatenate fragments with VideoEditor
+            self.video_editor.concatenate_fragments(fragment_files)
+
+            # Update media player with new video
+            output_path = "temp_output.mp4"
+            self.video_editor.save_video(output_path)
+            self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
+            self.playBtn.setEnabled(True)
+
+            # Reset slider and label
+            self.slider.setRange(0, self.mediaPlayer.duration())
+            self.slider.setValue(0)
+            self.label.setText("")
 
     def position_changed(self, position):
         self.slider.setValue(position)
