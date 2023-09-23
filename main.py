@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVB
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtGui import QIcon, QPalette
-from PyQt5.QtCore import Qt, QUrl, QTimer, QDateTime
+from PyQt5.QtCore import Qt, QUrl
 
 
 class VideoEditor:
@@ -33,6 +33,7 @@ class VideoEditor:
 
     def save_video(self, output_path):
         self.video.write_videofile(output_path, codec="libx264")
+
 
 class Window(QWidget):
     def __init__(self):
@@ -83,9 +84,17 @@ class Window(QWidget):
         self.changeSpeedBtn = QPushButton('Change Speed')
         self.changeSpeedBtn.clicked.connect(self.change_speed)
 
+        self.cutFragmentBtn = QPushButton('Cut Fragment')
+        self.cutFragmentBtn.clicked.connect(self.cut_fragment)
+
+        self.insertImageBtn = QPushButton('Insert Image')
+        self.insertImageBtn.clicked.connect(self.insert_image)
+
         # create hbox layout for video editing buttons
         editButtonsLayout = QHBoxLayout()
         editButtonsLayout.addWidget(self.changeSpeedBtn)
+        editButtonsLayout.addWidget(self.cutFragmentBtn)
+        editButtonsLayout.addWidget(self.insertImageBtn)
 
         # create hbox layout
         hboxLayout = QHBoxLayout()
@@ -158,6 +167,48 @@ class Window(QWidget):
             self.video_editor.save_video(output_path)
             self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
             self.playBtn.setEnabled(True)
+
+    def cut_fragment(self):
+        # Get start and end time values from the user
+        start_time, ok1 = QInputDialog.getInt(self, "Cut Fragment", "Enter start time in seconds:")
+        end_time, ok2 = QInputDialog.getInt(self, "Cut Fragment", "Enter end time in seconds:")
+
+        if ok1 and ok2:
+            # Cut fragment with VideoEditor
+            self.video_editor.cut_fragment(start_time, end_time)
+
+            # Update media player with new video
+            output_path = "temp_output.mp4"
+            self.video_editor.save_video(output_path)
+            self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
+            self.playBtn.setEnabled(True)
+
+            # Reset slider and label
+            self.slider.setRange(0, self.mediaPlayer.duration())
+            self.slider.setValue(0)
+            self.label.setText("")
+
+    def insert_image(self):
+        # Get image file path from the user
+        image_path, _ = QFileDialog.getOpenFileName(self, "Insert Image", "", "Image Files (*.jpg *.png)")
+
+        if image_path:
+            # Get start time from the user
+            start_time, ok = QInputDialog.getInt(self, "Insert Image", "Enter start time in seconds:")
+
+            if ok:
+                # Insert image with VideoEditor
+                self.video_editor.insert_image(image_path, start_time)
+                # Update media player with new video
+                output_path = "temp_output.mp4"
+                self.video_editor.save_video(output_path)
+                self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
+                self.playBtn.setEnabled(True)
+
+                # Reset slider and label
+                self.slider.setRange(0, self.mediaPlayer.duration())
+                self.slider.setValue(0)
+                self.label.setText("")
 
     def position_changed(self, position):
         self.slider.setValue(position)
