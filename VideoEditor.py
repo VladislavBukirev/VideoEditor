@@ -27,3 +27,13 @@ class VideoEditor:
 
     def save_video(self, output_path):
         self.video.write_videofile(output_path, codec="libx264")
+
+    def rotate_video(self, direction):
+        if direction == 'left':
+            self.video = self.video.fx(vfx.rotate, -90)
+        else:
+            self.video = self.video.fx(vfx.rotate, 90)
+
+    def crop_video(self, x1, y1, x2, y2):
+        self.video = self.video.fx(vfx.crop, x1, y1, x2, y2)
+

@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QLabel, QSlider, QStyle, \
-    QSizePolicy, QFileDialog, QInputDialog
+    QSizePolicy, QFileDialog, QInputDialog, QMenuBar, QMenu
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtGui import QIcon, QPalette
@@ -63,8 +63,14 @@ class Window(QWidget):
         self.insert_image_button = QPushButton('Insert Image')
         self.insert_image_button.clicked.connect(self.insert_image)
 
-        self.concatenate_button = QPushButton("Concatenate Videos")
+        self.concatenate_button = QPushButton('Concatenate Videos')
         self.concatenate_button.clicked.connect(self.concatenate_videos)
+
+        self.rotate_button = QPushButton('Rotate')
+        self.rotate_button.clicked.connect(self.rotate_video)
+
+        self.crop_button = QPushButton('Crop')
+        self.crop_button.clicked.connect(self.crop_video)
 
         # create hbox layout for video editing buttons
         edit_layout = QHBoxLayout()
@@ -72,6 +78,8 @@ class Window(QWidget):
         edit_layout.addWidget(self.cut_fragment_button)
         edit_layout.addWidget(self.insert_image_button)
         edit_layout.addWidget(self.concatenate_button)
+        edit_layout.addWidget(self.rotate_button)
+        edit_layout.addWidget(self.crop_button)
 
         # create hbox layout
         hbox_layout = QHBoxLayout()
@@ -97,6 +105,12 @@ class Window(QWidget):
         self.media_player.stateChanged.connect(self.mediastate_changed)
         self.media_player.positionChanged.connect(self.position_changed)
         self.media_player.durationChanged.connect(self.duration_changed)
+
+        self.menu_bar = QMenuBar(self)
+        self.create_template = QMenu('Create template')
+        self.menu_bar.addMenu(self.create_template)
+        self.use_template = QMenu('Use template')
+        self.menu_bar.addMenu(self.use_template)
 
         # Initialize VideoEditor
         self.video_editor = None
@@ -210,6 +224,34 @@ class Window(QWidget):
             self.slider.setRange(0, self.media_player.duration())
             self.slider.setValue(0)
             self.label.setText("")
+
+    def rotate_video(self):
+        directions = ["left", "right"]
+        direction, ok = QInputDialog.getItem(self, "Select direction", "Direction", directions)
+
+        if ok:
+            self.video_editor.rotate_video(direction)
+
+            # Update media player with new video
+            output_path = "temp_output.mp4"
+            self.video_editor.save_video(output_path)
+            self.media_player.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
+            self.play_button.setEnabled(True)
+
+    def crop_video(self):
+        x1, ok1 = QInputDialog.getInt(self, "Enter starting point x", "Starting point x:", step=1)
+        y1, ok2 = QInputDialog.getInt(self, "Enter end point y", "Starting point y:", step=1)
+        x2, ok3 = QInputDialog.getInt(self, "Enter starting point x", "End point x:", step=1)
+        y2, ok4 = QInputDialog.getInt(self, "Enter end point y", "End point y:", step=1)
+
+        if ok1 and ok2 and ok3 and ok4:
+            self.video_editor.crop_video(x1, y1, x2, y2)
+
+            # Update media player with new video
+            output_path = "temp_output.mp4"
+            self.video_editor.save_video(output_path)
+            self.media_player.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
+            self.play_button.setEnabled(True)
 
     def position_changed(self, position):
         self.slider.setValue(position)
