@@ -1,39 +1,11 @@
-from moviepy.editor import *
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QLabel, QSlider, QStyle, \
-    QSizePolicy, QFileDialog, QInputDialog, QProgressDialog
+    QSizePolicy, QFileDialog, QInputDialog
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtGui import QIcon, QPalette
-from PyQt5.QtCore import Qt, QUrl, QThread
-
-
-class VideoEditor:
-    def __init__(self, file_path):
-        self.file_path = file_path
-        self.video = VideoFileClip(file_path)
-        self.audio = self.video.audio
-
-    def change_speed(self, speed):
-        self.video = self.video.fx(vfx.speedx, speed)
-
-    def cut_fragment(self, start_time, end_time):
-        self.video = self.video.subclip(start_time, end_time)
-        self.audio = self.audio.subclip(start_time, end_time)
-
-    def concatenate_video(self, video_paths):
-        videos = [VideoFileClip(path) for path in video_paths]
-        concat_videos = concatenate_videoclips(videos)
-        self.video = concat_videos
-
-    def insert_image(self, image_path, start_time, end_time):
-        video = self.video
-        image = ImageClip(image_path).set_start(start_time).set_duration(end_time - start_time)
-        final = CompositeVideoClip([video, image])
-        self.video = final
-
-    def save_video(self, output_path):
-        self.video.write_videofile(output_path, codec="libx264")
+from PyQt5.QtCore import Qt, QUrl
+from VideoEditor import VideoEditor
 
 
 class Window(QWidget):
@@ -57,20 +29,20 @@ class Window(QWidget):
 
     def init_ui(self):
         # create media player object
-        self.mediaPlayer = QMediaPlayer(None, QMediaPlayer.VideoSurface)
+        self.media_player = QMediaPlayer(None, QMediaPlayer.VideoSurface)
 
         # create videowidget object
         videowidget = QVideoWidget()
 
         # create open button
-        openBtn = QPushButton('Open Video')
-        openBtn.clicked.connect(self.open_file)
+        open_button = QPushButton('Open Video')
+        open_button.clicked.connect(self.open_file)
 
         # create button for playing
-        self.playBtn = QPushButton()
-        self.playBtn.setEnabled(False)
-        self.playBtn.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
-        self.playBtn.clicked.connect(self.play_video)
+        self.play_button = QPushButton()
+        self.play_button.setEnabled(False)
+        self.play_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
+        self.play_button.clicked.connect(self.play_video)
 
         # create slider
         self.slider = QSlider(Qt.Horizontal)
@@ -82,49 +54,49 @@ class Window(QWidget):
         self.label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
 
         # create buttons for video editing
-        self.changeSpeedBtn = QPushButton('Change Speed')
-        self.changeSpeedBtn.clicked.connect(self.change_speed)
+        self.change_speed_button = QPushButton('Change Speed')
+        self.change_speed_button.clicked.connect(self.change_speed)
 
-        self.cutFragmentBtn = QPushButton('Cut Fragment')
-        self.cutFragmentBtn.clicked.connect(self.cut_fragment)
+        self.cut_fragment_button = QPushButton('Cut Fragment')
+        self.cut_fragment_button.clicked.connect(self.cut_fragment)
 
-        self.insertImageBtn = QPushButton('Insert Image')
-        self.insertImageBtn.clicked.connect(self.insert_image)
+        self.insert_image_button = QPushButton('Insert Image')
+        self.insert_image_button.clicked.connect(self.insert_image)
 
-        self.concatenateBtn = QPushButton("Concatenate Videos")
-        self.concatenateBtn.clicked.connect(self.concatenate_videos)
+        self.concatenate_button = QPushButton("Concatenate Videos")
+        self.concatenate_button.clicked.connect(self.concatenate_videos)
 
         # create hbox layout for video editing buttons
-        editButtonsLayout = QHBoxLayout()
-        editButtonsLayout.addWidget(self.changeSpeedBtn)
-        editButtonsLayout.addWidget(self.cutFragmentBtn)
-        editButtonsLayout.addWidget(self.insertImageBtn)
-        editButtonsLayout.addWidget(self.concatenateBtn)
+        edit_layout = QHBoxLayout()
+        edit_layout.addWidget(self.change_speed_button)
+        edit_layout.addWidget(self.cut_fragment_button)
+        edit_layout.addWidget(self.insert_image_button)
+        edit_layout.addWidget(self.concatenate_button)
 
         # create hbox layout
-        hboxLayout = QHBoxLayout()
-        hboxLayout.setContentsMargins(0, 0, 0, 0)
+        hbox_layout = QHBoxLayout()
+        hbox_layout.setContentsMargins(0, 0, 0, 0)
 
-        hboxLayout.addWidget(openBtn)
-        hboxLayout.addWidget(self.playBtn)
-        hboxLayout.addWidget(self.slider)
+        hbox_layout.addWidget(open_button)
+        hbox_layout.addWidget(self.play_button)
+        hbox_layout.addWidget(self.slider)
 
         # create vbox layout
-        vboxLayout = QVBoxLayout()
-        vboxLayout.addWidget(videowidget)
-        vboxLayout.addLayout(hboxLayout)
-        vboxLayout.addWidget(self.label)
-        vboxLayout.addLayout(editButtonsLayout)
+        vbox_layout = QVBoxLayout()
+        vbox_layout.addWidget(videowidget)
+        vbox_layout.addLayout(hbox_layout)
+        vbox_layout.addWidget(self.label)
+        vbox_layout.addLayout(edit_layout)
 
-        self.setLayout(vboxLayout)
+        self.setLayout(vbox_layout)
 
-        self.mediaPlayer.setVideoOutput(videowidget)
+        self.media_player.setVideoOutput(videowidget)
 
         # media player signals
 
-        self.mediaPlayer.stateChanged.connect(self.mediastate_changed)
-        self.mediaPlayer.positionChanged.connect(self.position_changed)
-        self.mediaPlayer.durationChanged.connect(self.duration_changed)
+        self.media_player.stateChanged.connect(self.mediastate_changed)
+        self.media_player.positionChanged.connect(self.position_changed)
+        self.media_player.durationChanged.connect(self.duration_changed)
 
         # Initialize VideoEditor
         self.video_editor = None
@@ -133,28 +105,28 @@ class Window(QWidget):
         filename, _ = QFileDialog.getOpenFileName(self, "Open Video")
 
         if filename != '':
-            self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(filename)))
-            self.playBtn.setEnabled(True)
+            self.media_player.setMedia(QMediaContent(QUrl.fromLocalFile(filename)))
+            self.play_button.setEnabled(True)
 
             # Initialize VideoEditor
             self.video_editor = VideoEditor(filename)
 
     def play_video(self):
-        if self.mediaPlayer.state() == QMediaPlayer.PlayingState:
-            self.mediaPlayer.pause()
+        if self.media_player.state() == QMediaPlayer.PlayingState:
+            self.media_player.pause()
 
         else:
-            self.mediaPlayer.play()
+            self.media_player.play()
 
     def mediastate_changed(self, state):
-        if self.mediaPlayer.state() == QMediaPlayer.PlayingState:
-            self.playBtn.setIcon(
+        if self.media_player.state() == QMediaPlayer.PlayingState:
+            self.play_button.setIcon(
                 self.style().standardIcon(QStyle.SP_MediaPause)
 
             )
 
         else:
-            self.playBtn.setIcon(
+            self.play_button.setIcon(
                 self.style().standardIcon(QStyle.SP_MediaPlay)
 
             )
@@ -170,8 +142,8 @@ class Window(QWidget):
             # Update media player with new video
             output_path = "temp_output.mp4"
             self.video_editor.save_video(output_path)
-            self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
-            self.playBtn.setEnabled(True)
+            self.media_player.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
+            self.play_button.setEnabled(True)
 
     def cut_fragment(self):
         # Get start and end time values from the user
@@ -185,11 +157,11 @@ class Window(QWidget):
             # Update media player with new video
             output_path = "temp_output.mp4"
             self.video_editor.save_video(output_path)
-            self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
-            self.playBtn.setEnabled(True)
+            self.media_player.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
+            self.play_button.setEnabled(True)
 
             # Reset slider and label
-            self.slider.setRange(0, self.mediaPlayer.duration())
+            self.slider.setRange(0, self.media_player.duration())
             self.slider.setValue(0)
             self.label.setText("")
 
@@ -208,11 +180,11 @@ class Window(QWidget):
                 # Update media player with new video
                 output_path = "temp_output.mp4"
                 self.video_editor.save_video(output_path)
-                self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
-                self.playBtn.setEnabled(True)
+                self.media_player.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
+                self.play_button.setEnabled(True)
 
                 # Reset slider and label
-                self.slider.setRange(0, self.mediaPlayer.duration())
+                self.slider.setRange(0, self.media_player.duration())
                 self.slider.setValue(0)
                 self.label.setText("")
 
@@ -231,11 +203,11 @@ class Window(QWidget):
             # Update media player with the concatenated video
             output_path = "temp_output.mp4"
             video_editor.save_video(output_path)
-            self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
-            self.playBtn.setEnabled(True)
+            self.media_player.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
+            self.play_button.setEnabled(True)
 
             # Reset slider and label
-            self.slider.setRange(0, self.mediaPlayer.duration())
+            self.slider.setRange(0, self.media_player.duration())
             self.slider.setValue(0)
             self.label.setText("")
 
@@ -246,13 +218,14 @@ class Window(QWidget):
         self.slider.setRange(0, duration)
 
     def set_position(self, position):
-        self.mediaPlayer.setPosition(position)
+        self.media_player.setPosition(position)
 
     def handle_errors(self):
-        self.playBtn.setEnabled(False)
-        self.label.setText("Error: " + self.mediaPlayer.errorString())
+        self.play_button.setEnabled(False)
+        self.label.setText("Error: " + self.media_player.errorString())
 
 
-app = QApplication(sys.argv)
-window = Window()
-sys.exit(app.exec_())
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    window = Window()
+    sys.exit(app.exec_())
