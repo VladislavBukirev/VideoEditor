@@ -20,9 +20,8 @@ class VideoEditor:
         self.audio = self.audio.subclip(start_time, end_time)
 
     def concatenate_video(self, video_paths):
-        self.try_record_actions(self.concatenate_videoclips, video_paths)
         videos = [VideoFileClip(path) for path in video_paths]
-        concat_videos = concatenate_videoclips(videos)
+        concat_videos = concatenate_videoclips(videos, method='compose')
         self.video = concat_videos
 
     def insert_image(self, image_path, start_time, end_time):
