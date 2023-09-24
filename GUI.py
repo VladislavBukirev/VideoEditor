@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QLabel, QSlider, QStyle, \
-    QSizePolicy, QFileDialog, QInputDialog, QMenuBar, QMenu
+    QSizePolicy, QFileDialog, QInputDialog, QMenuBar, QMenu, QAction
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtGui import QIcon, QPalette
@@ -20,14 +20,6 @@ class Window(QWidget):
         p.setColor(QPalette.Window, Qt.black)
         self.setPalette(p)
 
-        self.init_ui()
-
-        self.show()
-
-        # Initialize VideoEditor
-        self.video_editor = None
-
-    def init_ui(self):
         # create media player object
         self.media_player = QMediaPlayer(None, QMediaPlayer.VideoSurface)
 
@@ -106,11 +98,30 @@ class Window(QWidget):
         self.media_player.positionChanged.connect(self.position_changed)
         self.media_player.durationChanged.connect(self.duration_changed)
 
+        self.record_template_menus = []
+        self.use_template_menus = []
         self.menu_bar = QMenuBar(self)
         self.create_template = QMenu('Create template')
+        for i in range(1, 6):
+            menu = QMenu(f'Record to slot {i}')
+            self.record_template_menus.append(menu)
+            self.create_template.addMenu(menu)
+
         self.menu_bar.addMenu(self.create_template)
+        self.stop_template_recording = QMenu('Stop recording template')
+
+        self.menu_bar.addMenu(self.stop_template_recording)
         self.use_template = QMenu('Use template')
+        for i in range(1, 6):
+            menu = QMenu(f'Use template {i}')
+            self.use_template_menus.append(menu)
+            self.use_template.addMenu(menu)
         self.menu_bar.addMenu(self.use_template)
+
+        # Initialize VideoEditor
+        self.video_editor = None
+
+        self.show()
 
         # Initialize VideoEditor
         self.video_editor = None

@@ -6,6 +6,8 @@ class VideoEditor:
         self.file_path = file_path
         self.video = VideoFileClip(file_path)
         self.audio = self.video.audio
+        self._template_list = [None] * 5
+        self._template_is_recording = False
 
     def change_speed(self, speed):
         self.video = self.video.fx(vfx.speedx, speed)
