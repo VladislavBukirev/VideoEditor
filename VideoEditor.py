@@ -8,6 +8,7 @@ class VideoEditor:
         self.audio = self.video.audio
         self._template_list = [None] * 5
         self._template_is_recording = False
+        self._current_slot = -1
 
     def change_speed(self, speed):
         self.video = self.video.fx(vfx.speedx, speed)
@@ -39,3 +40,15 @@ class VideoEditor:
     def crop_video(self, x1, y1, x2, y2):
         self.video = self.video.fx(vfx.crop, x1, y1, x2, y2)
 
+    def stop_recording(self):
+        self._template_is_recording = False
+
+    def record_template(self, slot):
+        self._template_is_recording = True
+        self._template_list[slot] = []
+        self._current_slot = slot
+
+    def use_template(self, slot):
+        self._template_is_recording = False
+        self._current_slot = slot
+        pass

@@ -103,20 +103,24 @@ class Window(QWidget):
         self.menu_bar = QMenuBar(self)
         self.create_template = QMenu('Create template')
         for i in range(1, 6):
-            menu = QMenu(f'Record to slot {i}')
+            menu = QAction(f'Record to slot {i}', self)
+            menu.triggered.connect(self.record_template)
             self.record_template_menus.append(menu)
-            self.create_template.addMenu(menu)
-
+            self.create_template.addAction(menu)
         self.menu_bar.addMenu(self.create_template)
-        self.stop_template_recording = QMenu('Stop recording template')
 
-        self.menu_bar.addMenu(self.stop_template_recording)
-        self.use_template = QMenu('Use template')
+        self.stop_template_recording = QAction('Stop recording template', self)
+        self.stop_template_recording.triggered.connect(self.stop_recording)
+
+        self.menu_bar.addAction(self.stop_template_recording)
+
+        self.use_template_menu = QMenu('Use template')
         for i in range(1, 6):
-            menu = QMenu(f'Use template {i}')
+            menu = QAction(f'Use template {i}', self)
+            menu.triggered.connect(self.use_template)
             self.use_template_menus.append(menu)
-            self.use_template.addMenu(menu)
-        self.menu_bar.addMenu(self.use_template)
+            self.use_template_menu.addAction(menu)
+        self.menu_bar.addMenu(self.use_template_menu)
 
         # Initialize VideoEditor
         self.video_editor = None
@@ -264,6 +268,17 @@ class Window(QWidget):
             self.media_player.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
             self.play_button.setEnabled(True)
 
+    def record_template(self):
+        slot_number = int(self.sender().text()[-1]) - 1
+        self.video_editor.record_template(slot_number)
+
+    def stop_recording(self):
+        self.video_editor.stop_recording()
+
+    def use_template(self):
+        slot_number = int(self.sender().text()[-1]) - 1
+        self.video_editor.use_template(slot_number)
+
     def position_changed(self, position):
         self.slider.setValue(position)
 
@@ -282,3 +297,4 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = Window()
     sys.exit(app.exec_())
+
