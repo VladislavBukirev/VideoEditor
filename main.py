@@ -1,11 +1,11 @@
 from moviepy.editor import *
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QLabel, QSlider, QStyle, \
-    QSizePolicy, QFileDialog, QInputDialog
+    QSizePolicy, QFileDialog, QInputDialog, QProgressDialog
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtGui import QIcon, QPalette
-from PyQt5.QtCore import Qt, QUrl
+from PyQt5.QtCore import Qt, QUrl, QThread
 
 
 class VideoEditor:
@@ -21,15 +21,16 @@ class VideoEditor:
         self.video = self.video.subclip(start_time, end_time)
         self.audio = self.audio.subclip(start_time, end_time)
 
-    def concatenate_fragments(self, fragments):
-        concat_videos = concatenate_videoclips([VideoFileClip(fragment) for fragment in fragments])
+    def concatenate_video(self, video_paths):
+        videos = [VideoFileClip(path) for path in video_paths]
+        concat_videos = concatenate_videoclips(videos)
         self.video = concat_videos
 
-    def insert_image(self, image_path, start_time):
-        image = ImageClip(image_path)
-        image = image.set_duration(self.video.duration)
-        image = image.set_start(start_time)
-        self.video = CompositeVideoClip([self.video, image])
+    def insert_image(self, image_path, start_time, end_time):
+        video = self.video
+        image = ImageClip(image_path).set_start(start_time).set_duration(end_time - start_time)
+        final = CompositeVideoClip([video, image])
+        self.video = final
 
     def save_video(self, output_path):
         self.video.write_videofile(output_path, codec="libx264")
@@ -90,8 +91,8 @@ class Window(QWidget):
         self.insertImageBtn = QPushButton('Insert Image')
         self.insertImageBtn.clicked.connect(self.insert_image)
 
-        self.concatenateBtn = QPushButton('Concatenate Fragments')
-        self.concatenateBtn.clicked.connect(self.concatenate_fragments)
+        self.concatenateBtn = QPushButton("Concatenate Videos")
+        self.concatenateBtn.clicked.connect(self.concatenate_videos)
 
         # create hbox layout for video editing buttons
         editButtonsLayout = QHBoxLayout()
@@ -198,11 +199,12 @@ class Window(QWidget):
 
         if image_path:
             # Get start time from the user
-            start_time, ok = QInputDialog.getInt(self, "Insert Image", "Enter start time in seconds:")
+            start_time, ok1 = QInputDialog.getInt(self, "Insert Image", "Enter start time in seconds:")
+            end_time, ok2 = QInputDialog.getInt(self, "Insert Image", "Enter end time in seconds:")
 
-            if ok:
+            if ok1 and ok2:
                 # Insert image with VideoEditor
-                self.video_editor.insert_image(image_path, start_time)
+                self.video_editor.insert_image(image_path, start_time, end_time)
                 # Update media player with new video
                 output_path = "temp_output.mp4"
                 self.video_editor.save_video(output_path)
@@ -214,18 +216,21 @@ class Window(QWidget):
                 self.slider.setValue(0)
                 self.label.setText("")
 
+    def concatenate_videos(self):
+        # Get video paths from the user
+        video1_path, _ = QFileDialog.getOpenFileName(self, "Select Video 1", "", "Video Files (*.mp4)")
+        video2_path, _ = QFileDialog.getOpenFileName(self, "Select Video 2", "", "Video Files (*.mp4)")
 
-    def concatenate_fragments(self):
-        # Get fragment files from the user
-        fragment_files, _ = QFileDialog.getOpenFileNames(self, "Concatenate Fragments", "", "Video Files (*.mp4)")
+        if video1_path and video2_path:
+            # Initialize VideoEditor for the first video
+            video_editor = VideoEditor(video1_path)
 
-        if len(fragment_files) > 0:
-            # Concatenate fragments with VideoEditor
-            self.video_editor.concatenate_fragments(fragment_files)
+            # Concatenate the videos
+            video_editor.concatenate_video([video1_path, video2_path])
 
-            # Update media player with new video
+            # Update media player with the concatenated video
             output_path = "temp_output.mp4"
-            self.video_editor.save_video(output_path)
+            video_editor.save_video(output_path)
             self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
             self.playBtn.setEnabled(True)
 
