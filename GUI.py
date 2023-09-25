@@ -121,6 +121,13 @@ class Window(QWidget):
             self.use_template_menus.append(menu)
             self.use_template_menu.addAction(menu)
         self.menu_bar.addMenu(self.use_template_menu)
+        self.save_as_menu = QAction('Save as', self)
+        self.save_as_menu.triggered.connect(self.save_as)
+        self.menu_bar.addAction(self.save_as_menu)
+        self.save_menu = QAction('Save', self)
+        self.save_menu.triggered.connect(self.save)
+        self.menu_bar.addAction(self.save_menu)
+        self.menu_bar.setDisabled(True)
 
         # Initialize VideoEditor
         self.video_editor = None
@@ -139,6 +146,7 @@ class Window(QWidget):
 
             # Initialize VideoEditor
             self.video_editor = VideoEditor(filename)
+            self.menu_bar.setEnabled(True)
 
     def play_video(self):
         if self.media_player.state() == QMediaPlayer.PlayingState:
@@ -169,10 +177,7 @@ class Window(QWidget):
             self.video_editor.change_speed(speed)
 
             # Update media player with new video
-            output_path = "temp_output.mp4"
-            self.video_editor.save_video(output_path)
-            self.media_player.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
-            self.play_button.setEnabled(True)
+            self.update_video_player()
 
     def cut_fragment(self):
         # Get start and end time values from the user
@@ -184,15 +189,10 @@ class Window(QWidget):
             self.video_editor.cut_fragment(start_time, end_time)
 
             # Update media player with new video
-            output_path = "temp_output.mp4"
-            self.video_editor.save_video(output_path)
-            self.media_player.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
-            self.play_button.setEnabled(True)
+            self.update_video_player()
 
             # Reset slider and label
-            self.slider.setRange(0, self.media_player.duration())
-            self.slider.setValue(0)
-            self.label.setText("")
+            self.reset_slider()
 
     def insert_image(self):
         # Get image file path from the user
@@ -207,15 +207,10 @@ class Window(QWidget):
                 # Insert image with VideoEditor
                 self.video_editor.insert_image(image_path, start_time, end_time)
                 # Update media player with new video
-                output_path = "temp_output.mp4"
-                self.video_editor.save_video(output_path)
-                self.media_player.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
-                self.play_button.setEnabled(True)
+                self.update_video_player()
 
                 # Reset slider and label
-                self.slider.setRange(0, self.media_player.duration())
-                self.slider.setValue(0)
-                self.label.setText("")
+                self.reset_slider()
 
     def concatenate_videos(self):
         # Get video paths from the user
@@ -230,15 +225,15 @@ class Window(QWidget):
             video_editor.concatenate_video([video1_path, video2_path])
 
             # Update media player with the concatenated video
-            output_path = "temp_output.mp4"
-            video_editor.save_video(output_path)
-            self.media_player.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
-            self.play_button.setEnabled(True)
+            self.update_video_player()
 
             # Reset slider and label
-            self.slider.setRange(0, self.media_player.duration())
-            self.slider.setValue(0)
-            self.label.setText("")
+            self.reset_slider()
+
+    def reset_slider(self):
+        self.slider.setRange(0, self.media_player.duration())
+        self.slider.setValue(0)
+        self.label.setText("")
 
     def rotate_video(self):
         directions = ["left", "right"]
@@ -248,10 +243,7 @@ class Window(QWidget):
             self.video_editor.rotate_video(direction)
 
             # Update media player with new video
-            output_path = "temp_output.mp4"
-            self.video_editor.save_video(output_path)
-            self.media_player.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
-            self.play_button.setEnabled(True)
+            self.update_video_player()
 
     def crop_video(self):
         x1, ok1 = QInputDialog.getInt(self, "Enter starting point x", "Starting point x:", step=1)
@@ -263,10 +255,13 @@ class Window(QWidget):
             self.video_editor.crop_video(x1, y1, x2, y2)
 
             # Update media player with new video
-            output_path = "temp_output.mp4"
-            self.video_editor.save_video(output_path)
-            self.media_player.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
-            self.play_button.setEnabled(True)
+            self.update_video_player()
+
+    def update_video_player(self):
+        output_path = "temp_output.mp4"
+        self.video_editor.save_video(output_path)
+        self.media_player.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
+        self.play_button.setEnabled(True)
 
     def record_template(self):
         slot_number = int(self.sender().text()[-1]) - 1
@@ -278,6 +273,7 @@ class Window(QWidget):
     def use_template(self):
         slot_number = int(self.sender().text()[-1]) - 1
         self.video_editor.use_template(slot_number)
+        self.update_video_player()
 
     def position_changed(self, position):
         self.slider.setValue(position)
@@ -291,6 +287,15 @@ class Window(QWidget):
     def handle_errors(self):
         self.play_button.setEnabled(False)
         self.label.setText("Error: " + self.media_player.errorString())
+
+    def save_as(self):
+        path, ok = QFileDialog.getSaveFileName()
+        if ok and path:
+            self.video_editor.save_as(path)
+            self.video_editor.file_path = path
+
+    def save(self):
+        self.video_editor.save_video(self.video_editor.file_path)
 
 
 if __name__ == '__main__':
