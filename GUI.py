@@ -1,4 +1,7 @@
+import os
 import sys
+import time
+
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QLabel, QSlider, QStyle, \
     QSizePolicy, QFileDialog, QInputDialog, QMenuBar, QMenu, QAction
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
@@ -11,7 +14,6 @@ from VideoEditor import VideoEditor
 class Window(QWidget):
     def __init__(self):
         super().__init__()
-
         self.setWindowTitle("PyQt5 Media Player")
         self.setGeometry(350, 100, 700, 500)
         self.setWindowIcon(QIcon('player.png'))
@@ -148,6 +150,7 @@ class Window(QWidget):
             self.video_editor = VideoEditor(filename)
             self.menu_bar.setEnabled(True)
 
+
     def play_video(self):
         if self.media_player.state() == QMediaPlayer.PlayingState:
             self.media_player.pause()
@@ -259,6 +262,7 @@ class Window(QWidget):
 
     def update_video_player(self):
         output_path = "temp_output.mp4"
+        self.media_player.setMedia(QMediaContent(QUrl.fromLocalFile(self.video_editor.file_path)))
         self.video_editor.save_video(output_path)
         self.media_player.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))
         self.play_button.setEnabled(True)
