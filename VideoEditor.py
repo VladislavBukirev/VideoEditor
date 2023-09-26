@@ -1,5 +1,3 @@
-import time
-
 from moviepy.editor import VideoFileClip, concatenate_videoclips, ImageClip, CompositeVideoClip
 import moviepy.video.fx.all as vfx
 

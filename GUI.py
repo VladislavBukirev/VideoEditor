@@ -150,7 +150,6 @@ class Window(QWidget):
             self.video_editor = VideoEditor(filename)
             self.menu_bar.setEnabled(True)
 
-
     def play_video(self):
         if self.media_player.state() == QMediaPlayer.PlayingState:
             self.media_player.pause()
@@ -222,10 +221,10 @@ class Window(QWidget):
 
         if video1_path and video2_path:
             # Initialize VideoEditor for the first video
-            video_editor = VideoEditor(video1_path)
+            self.video_editor = VideoEditor(video1_path)
 
             # Concatenate the videos
-            video_editor.concatenate_video([video1_path, video2_path])
+            self.video_editor.concatenate_video([video1_path, video2_path])
 
             # Update media player with the concatenated video
             self.update_video_player()
