@@ -1,1 +1,1 @@
-[[['change_speed', 1.5], ['rotate_video', 'left'], ['crop_video', 0, 0, 400, 400]], None, None, None, None]
+[[['rotate_video', 'right'], ['change_speed', 0.7]], None, None, None, None]

@@ -1,6 +1,4 @@
-import os
 import sys
-import time
 
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QLabel, QSlider, QStyle, \
     QSizePolicy, QFileDialog, QInputDialog, QMenuBar, QMenu, QAction
@@ -11,6 +9,7 @@ from PyQt5.QtCore import Qt, QUrl
 from VideoEditor import VideoEditor
 
 
+# noinspection PyUnresolvedReferences
 class Window(QWidget):
     def __init__(self):
         super().__init__()
@@ -157,7 +156,7 @@ class Window(QWidget):
         else:
             self.media_player.play()
 
-    def mediastate_changed(self, state):
+    def mediastate_changed(self):
         if self.media_player.state() == QMediaPlayer.PlayingState:
             self.play_button.setIcon(
                 self.style().standardIcon(QStyle.SP_MediaPause)
@@ -232,6 +231,8 @@ class Window(QWidget):
             # Reset slider and label
             self.reset_slider()
 
+            self.menu_bar.setEnabled(True)
+
     def reset_slider(self):
         self.slider.setRange(0, self.media_player.duration())
         self.slider.setValue(0)
@@ -305,4 +306,3 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = Window()
     sys.exit(app.exec_())
-

@@ -71,6 +71,8 @@ class VideoEditor:
     def use_template(self, slot):
         self._template_is_recording = False
         self._current_slot = slot
+        if not self._template_list[self._current_slot]:
+            return
         for i in self._template_list[self._current_slot]:
             match i[0]:
                 case 'change_speed':
