@@ -139,14 +139,16 @@ class Window(QWidget):
         self.save_menu.triggered.connect(self.save)
         self.save_menu.setShortcut(QKeySequence("Ctrl+S"))
         self.menu_bar.addAction(self.save_menu)
-        undo = QAction('Undo', self)
-        undo.triggered.connect(self.undo)
-        undo.setShortcut(QKeySequence("Ctrl+Z"))
-        self.menu_bar.addAction(undo)
-        redo = QAction('Redo', self)
-        redo.triggered.connect(self.redo)
-        redo.setShortcut(QKeySequence("Ctrl+R"))
-        self.menu_bar.addAction(redo)
+        self.undo_button = QAction('Undo', self)
+        self.undo_button.triggered.connect(self.undo)
+        self.undo_button.setShortcut(QKeySequence("Ctrl+Z"))
+        self.undo_button.setDisabled(True)
+        self.menu_bar.addAction(self.undo_button)
+        self.redo_button = QAction('Redo', self)
+        self.redo_button.triggered.connect(self.redo)
+        self.redo_button.setShortcut(QKeySequence("Ctrl+R"))
+        self.redo_button.setDisabled(True)
+        self.menu_bar.addAction(self.redo_button)
         self.menu_bar.setDisabled(True)
 
         # Initialize VideoEditor
@@ -179,16 +181,15 @@ class Window(QWidget):
         if self.media_player.state() == QMediaPlayer.PlayingState:
             self.play_button.setIcon(
                 self.style().standardIcon(QStyle.SP_MediaPause)
-
             )
 
         else:
             self.play_button.setIcon(
                 self.style().standardIcon(QStyle.SP_MediaPlay)
-
             )
 
     def change_speed(self):
+        self.undo_button.setEnabled(True)
         # Get speed value from the user
         speed, ok = QInputDialog.getDouble(self, "Change Speed", "Enter new speed:", value=1.0)
 
@@ -200,9 +201,16 @@ class Window(QWidget):
             self.update_video_player()
 
     def cut_fragment(self):
+        self.undo_button.setEnabled(True)
         # Get start and end time values from the user
-        start_time, ok1 = QInputDialog.getInt(self, "Cut Fragment", "Enter start time in seconds:")
-        end_time, ok2 = QInputDialog.getInt(self, "Cut Fragment", "Enter end time in seconds:")
+        start_time, ok1 = QInputDialog.getInt(self, "Cut Fragment",
+                                              "Enter start time in seconds:",
+                                              min=0,
+                                              max=int(self.video_editor.video.duration-1))
+        end_time, ok2 = QInputDialog.getInt(self, "Cut Fragment",
+                                            "Enter end time in seconds:",
+                                            min=start_time+1,
+                                            max=int(self.video_editor.video.duration))
 
         if ok1 and ok2:
             # Cut fragment with VideoEditor
@@ -215,13 +223,22 @@ class Window(QWidget):
             self.reset_slider()
 
     def insert_image(self):
+        self.undo_button.setEnabled(True)
         # Get image file path from the user
         image_path, _ = QFileDialog.getOpenFileName(self, "Insert Image", "", "Image Files (*.jpg *.png)")
 
         if image_path:
             # Get start time from the user
-            start_time, ok1 = QInputDialog.getInt(self, "Insert Image", "Enter start time in seconds:")
-            end_time, ok2 = QInputDialog.getInt(self, "Insert Image", "Enter end time in seconds:")
+            start_time, ok1 = QInputDialog.getInt(self,
+                                                  "Insert Image",
+                                                  "Enter start time in seconds:",
+                                                  min=0,
+                                                  max=int(self.video_editor.video.duration-1))
+            end_time, ok2 = QInputDialog.getInt(self,
+                                                "Insert Image",
+                                                "Enter end time in seconds:",
+                                                min=start_time + 1,
+                                                max=int(self.video_editor.video.duration))
 
             if ok1 and ok2:
                 # Insert image with VideoEditor
@@ -258,6 +275,7 @@ class Window(QWidget):
         self.label.setText("")
 
     def rotate_video(self):
+        self.undo_button.setEnabled(True)
         directions = ["left", "right"]
         direction, ok = QInputDialog.getItem(self, "Select direction", "Direction", directions)
 
@@ -268,6 +286,7 @@ class Window(QWidget):
             self.update_video_player()
 
     def crop_video(self):
+        self.undo_button.setEnabled(True)
         x1, ok1 = QInputDialog.getInt(self, "Enter starting point x", "Starting point x:", step=1)
         y1, ok2 = QInputDialog.getInt(self, "Enter end point y", "Starting point y:", step=1)
         x2, ok3 = QInputDialog.getInt(self, "Enter starting point x", "End point x:", step=1)
@@ -299,10 +318,18 @@ class Window(QWidget):
         self.update_video_player()
 
     def undo(self):
-        pass
+        self.video_editor.undo()
+        self.update_video_player()
+        if not self.video_editor.undo_stack_length:
+            self.undo_button.setDisabled(True)
+        self.redo_button.setEnabled(True)
 
     def redo(self):
-        pass
+        self.video_editor.redo()
+        self.update_video_player()
+        if not self.video_editor.redo_stack_length:
+            self.redo_button.setDisabled(True)
+        self.undo_button.setEnabled(True)
 
     def choose_fragment(self):
         pass
