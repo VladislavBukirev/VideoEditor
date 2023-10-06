@@ -332,10 +332,30 @@ class Window(QWidget):
         self.undo_button.setEnabled(True)
 
     def choose_fragment(self):
-        pass
+        self.undo_button.setEnabled(True)
+        # Get start and end time values from the user
+        start_time, ok1 = QInputDialog.getInt(self, "Choose Fragment",
+                                              "Enter start time in seconds:",
+                                              min=0,
+                                              max=int(self.video_editor.video.duration - 1))
+        end_time, ok2 = QInputDialog.getInt(self, "Choose Fragment",
+                                            "Enter end time in seconds:",
+                                            min=start_time + 1,
+                                            max=int(self.video_editor.video.duration))
+
+        if ok1 and ok2:
+            # Cut fragment with VideoEditor
+            self.video_editor.choose_fragment(start_time, end_time)
+
+            # Update media player with new video
+            self.update_video_player()
+
+            # Reset slider and label
+            self.reset_slider()
 
     def edit_full_video(self):
-        pass
+        self.video_editor.edit_full_video()
+        self.update_video_player()
 
     def position_changed(self, position):
         self.slider.setValue(position)

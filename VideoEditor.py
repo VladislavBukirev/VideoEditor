@@ -1,4 +1,4 @@
-from moviepy.editor import VideoFileClip, concatenate_videoclips, ImageClip, CompositeVideoClip
+from moviepy.editor import VideoFileClip, concatenate_videoclips, ImageClip, CompositeVideoClip, concatenate_audioclips
 import moviepy.video.fx.all as vfx
 from collections import deque
 
@@ -7,7 +7,8 @@ class VideoEditor:
     def __init__(self, file_path):
         self.file_path = file_path
         self.video = VideoFileClip(file_path)
-        self.audio = self.video.audio
+        self.right_fragment = None
+        self.left_fragment = None
         self._undo_stack = deque()
         self._redo_stack = deque()
         self.undo_stack_length = 0
@@ -30,7 +31,6 @@ class VideoEditor:
         self._change_undo_redo_stacks()
         self.try_record_actions(VideoEditor.cut_fragment, start_time, end_time)
         self.video = self.video.subclip(start_time, end_time)
-        self.audio = self.audio.subclip(start_time, end_time)
 
     def concatenate_video(self, video_paths):
         videos = [VideoFileClip(path) for path in video_paths]
@@ -101,7 +101,7 @@ class VideoEditor:
     def _change_undo_redo_stacks(self):
         self._redo_stack = deque()
         self.redo_stack_length = 0
-        self._undo_stack.append(self.video)
+        self._undo_stack.append([self.left_fragment, self.video, self.right_fragment])
         self.undo_stack_length += 1
         if len(self._undo_stack) >= 3:
             self._undo_stack.popleft()
@@ -109,20 +109,40 @@ class VideoEditor:
 
     def undo(self):
         if len(self._undo_stack):
-            self._redo_stack.append(self.video)
+            self._redo_stack.append([self.left_fragment, self.video, self.right_fragment])
             self.redo_stack_length += 1
-            self.video = self._undo_stack.pop()
+            self.left_fragment, self.video, self.right_fragment = self._undo_stack.pop()
             self.undo_stack_length -= 1
 
     def redo(self):
         if len(self._redo_stack):
-            self._undo_stack.append(self.video)
+            self._undo_stack.append([self.left_fragment, self.video, self.right_fragment])
             self.undo_stack_length += 1
-            self.video = self._redo_stack.pop()
+            self.left_fragment, self.video, self.right_fragment = self._redo_stack.pop()
             self.redo_stack_length -= 1
 
-    def choose_fragment(self):
-        pass
+    def choose_fragment(self, start_time, end_time):
+        self._change_undo_redo_stacks()
+        self.try_record_actions(VideoEditor.choose_fragment, start_time, end_time)
+        if start_time:
+            self.left_fragment = self.video.subclip(0, start_time)
+        if end_time != int(self.video.duration):
+            self.right_fragment = self.video.subclip(end_time, self.video.duration)
+        self.video = self.video.subclip(start_time, end_time)
 
     def edit_full_video(self):
-        pass
+        self._change_undo_redo_stacks()
+        self.try_record_actions(VideoEditor.edit_full_video)
+        if self.right_fragment:
+            self.video = concatenate_videoclips([self.left_fragment,
+                                                 self.video,
+                                                 self.right_fragment],
+                                                method="compose")
+        elif self.right_fragment:
+            self.video = concatenate_videoclips([self.video,
+                                                 self.right_fragment],
+                                                method="compose")
+        elif self.left_fragment:
+            self.video = concatenate_videoclips([self.left_fragment,
+                                                 self.video],
+                                                method="compose")
