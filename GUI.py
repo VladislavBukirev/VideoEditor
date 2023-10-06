@@ -1,15 +1,15 @@
 import sys
 
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QLabel, QSlider, QStyle, \
-    QSizePolicy, QFileDialog, QInputDialog, QMenuBar, QMenu, QAction
+from PyQt5.QtCore import Qt, QUrl
+from PyQt5.QtGui import QIcon, QPalette, QKeySequence
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtMultimediaWidgets import QVideoWidget
-from PyQt5.QtGui import QIcon, QPalette
-from PyQt5.QtCore import Qt, QUrl
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QLabel, QSlider, QStyle, \
+    QSizePolicy, QFileDialog, QInputDialog, QMenuBar, QMenu, QAction
+
 from VideoEditor import VideoEditor
 
 
-# noinspection PyUnresolvedReferences
 class Window(QWidget):
     def __init__(self):
         super().__init__()
@@ -30,6 +30,13 @@ class Window(QWidget):
         # create open button
         open_button = QPushButton('Open Video')
         open_button.clicked.connect(self.open_file)
+        open_button.setShortcut(QKeySequence("Ctrl+O"))
+
+        choose_fragment = QPushButton('Choose fragment')
+        choose_fragment.clicked.connect(self.choose_fragment)
+
+        edit_full_video = QPushButton('Edit full video')
+        edit_full_video.clicked.connect(self.edit_full_video)
 
         # create button for playing
         self.play_button = QPushButton()
@@ -79,6 +86,8 @@ class Window(QWidget):
         hbox_layout.setContentsMargins(0, 0, 0, 0)
 
         hbox_layout.addWidget(open_button)
+        hbox_layout.addWidget(choose_fragment)
+        hbox_layout.addWidget(edit_full_video)
         hbox_layout.addWidget(self.play_button)
         hbox_layout.addWidget(self.slider)
 
@@ -124,10 +133,20 @@ class Window(QWidget):
         self.menu_bar.addMenu(self.use_template_menu)
         self.save_as_menu = QAction('Save as', self)
         self.save_as_menu.triggered.connect(self.save_as)
+        self.save_as_menu.setShortcut(QKeySequence("Ctrl+Shift+S"))
         self.menu_bar.addAction(self.save_as_menu)
         self.save_menu = QAction('Save', self)
         self.save_menu.triggered.connect(self.save)
+        self.save_menu.setShortcut(QKeySequence("Ctrl+S"))
         self.menu_bar.addAction(self.save_menu)
+        undo = QAction('Undo', self)
+        undo.triggered.connect(self.undo)
+        undo.setShortcut(QKeySequence("Ctrl+Z"))
+        self.menu_bar.addAction(undo)
+        redo = QAction('Redo', self)
+        redo.triggered.connect(self.redo)
+        redo.setShortcut(QKeySequence("Ctrl+R"))
+        self.menu_bar.addAction(redo)
         self.menu_bar.setDisabled(True)
 
         # Initialize VideoEditor
@@ -278,6 +297,18 @@ class Window(QWidget):
         slot_number = int(self.sender().text()[-1]) - 1
         self.video_editor.use_template(slot_number)
         self.update_video_player()
+
+    def undo(self):
+        pass
+
+    def redo(self):
+        pass
+
+    def choose_fragment(self):
+        pass
+
+    def edit_full_video(self):
+        pass
 
     def position_changed(self, position):
         self.slider.setValue(position)
