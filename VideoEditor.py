@@ -147,14 +147,12 @@ class VideoEditor:
                                                  self.video],
                                                 method="compose")
 
-    def add_fade_in_out(self, fade_type):
-        fade_duration = 3  # Длительность эффекта Fade-in и fade-out в секундах
-
+    def add_fade_in_out(self, fade_type, fade_in_duration, fade_out_duration):
         if fade_type == 'dark':
             fade_color = (0, 0, 0)
         elif fade_type == 'light':
             fade_color = (255, 255, 255)
 
-        final_clip = self.video.fadein(fade_duration, fade_color).fadeout(fade_duration, fade_color)
+        final_clip = self.video.fadein(fade_in_duration, fade_color).fadeout(fade_out_duration, fade_color)
 
         self.video = final_clip

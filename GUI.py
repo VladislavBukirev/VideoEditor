@@ -39,16 +39,11 @@ class Window(QWidget):
         edit_full_video.clicked.connect(self.edit_full_video)
 
         # create button for fade-in
-        fade_in_button = QPushButton('Fade In')
-        fade_in_button.clicked.connect(lambda: self.add_fade_in_out('dark'))
-
-        # create button for fade-out
-        fade_out_button = QPushButton('Fade Out')
-        fade_out_button.clicked.connect(lambda: self.add_fade_in_out('dark'))
+        fade_in_button = QPushButton('Fade-in/Fade-out')
+        # fade_in_button.clicked.connect(lambda: self.add_fade_in_out('dark'))
 
         fade_layout = QHBoxLayout()
         fade_layout.addWidget(fade_in_button)
-        fade_layout.addWidget(fade_out_button)
 
         # create button for playing
         self.play_button = QPushButton()
@@ -112,6 +107,13 @@ class Window(QWidget):
         vbox_layout.addLayout(fade_layout)
 
         self.setLayout(vbox_layout)
+
+        # Create the fade menu
+        fade_menu = QMenu(self)
+        fade_menu.addAction("Dark", lambda: self.add_fade_in_out('dark'))
+        fade_menu.addAction("Light", lambda: self.add_fade_in_out('light'))
+        fade_menu.addAction("Grayscale", lambda: self.add_fade_in_out('grayscale'))
+        fade_in_button.setMenu(fade_menu)
 
         self.media_player.setVideoOutput(videowidget)
 
@@ -394,8 +396,14 @@ class Window(QWidget):
 
     def add_fade_in_out(self, fade_type):
         if self.video_editor:
-            self.video_editor.add_fade_in_out(fade_type)
-            self.update_video_player()
+            fade_in_duration, ok1 = QInputDialog.getInt(self, "Fade In", "Enter fade-in duration in seconds:",
+                                                        min=1, max=10)
+            fade_out_duration, ok2 = QInputDialog.getInt(self, "Fade Out", "Enter fade-out duration in seconds:",
+                                                         min=1, max=10)
+
+            if ok1 and ok2:
+                self.video_editor.add_fade_in_out(fade_type, fade_in_duration, fade_out_duration)
+                self.update_video_player()
 
 
 if __name__ == '__main__':
