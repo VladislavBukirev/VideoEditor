@@ -38,6 +38,18 @@ class Window(QWidget):
         edit_full_video = QPushButton('Edit full video')
         edit_full_video.clicked.connect(self.edit_full_video)
 
+        # create button for fade-in
+        fade_in_button = QPushButton('Fade In')
+        fade_in_button.clicked.connect(lambda: self.add_fade_in_out('dark'))
+
+        # create button for fade-out
+        fade_out_button = QPushButton('Fade Out')
+        fade_out_button.clicked.connect(lambda: self.add_fade_in_out('dark'))
+
+        fade_layout = QHBoxLayout()
+        fade_layout.addWidget(fade_in_button)
+        fade_layout.addWidget(fade_out_button)
+
         # create button for playing
         self.play_button = QPushButton()
         self.play_button.setEnabled(False)
@@ -97,6 +109,7 @@ class Window(QWidget):
         vbox_layout.addLayout(hbox_layout)
         vbox_layout.addWidget(self.label)
         vbox_layout.addLayout(edit_layout)
+        vbox_layout.addLayout(fade_layout)
 
         self.setLayout(vbox_layout)
 
@@ -378,6 +391,11 @@ class Window(QWidget):
 
     def save(self):
         self.video_editor.save_video(self.video_editor.file_path)
+
+    def add_fade_in_out(self, fade_type):
+        if self.video_editor:
+            self.video_editor.add_fade_in_out(fade_type)
+            self.update_video_player()
 
 
 if __name__ == '__main__':
