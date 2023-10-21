@@ -147,11 +147,21 @@ class VideoEditor:
                                                  self.video],
                                                 method="compose")
 
+    def fade_in_out_grayscale(self, fade_in_duration, fade_out_duration):
+        start_clip = self.video.subclip(0, fade_in_duration).fx(vfx.blackwhite).fadein(fade_in_duration)
+        medium_clip = self.video.subclip(fade_in_duration, self.video.duration - fade_out_duration)
+        end_clip = self.video.subclip(self.video.duration - fade_out_duration, self.video.duration).fx(vfx.blackwhite).fadeout(fade_out_duration)
+
+        self.video = concatenate_videoclips([start_clip, medium_clip, end_clip])
+
     def add_fade_in_out(self, fade_type, fade_in_duration, fade_out_duration):
         if fade_type == 'dark':
             fade_color = (0, 0, 0)
         elif fade_type == 'light':
             fade_color = (255, 255, 255)
+        elif fade_type == 'grayscale':
+            self.fade_in_out_grayscale(fade_in_duration, fade_out_duration)
+            return
 
         final_clip = self.video.fadein(fade_in_duration, fade_color).fadeout(fade_out_duration, fade_color)
 
