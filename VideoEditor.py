@@ -1,4 +1,4 @@
-from moviepy.editor import VideoFileClip, concatenate_videoclips, ImageClip, CompositeVideoClip, concatenate_audioclips
+from moviepy.editor import VideoFileClip, concatenate_videoclips, ImageClip, CompositeVideoClip
 import moviepy.video.fx.all as vfx
 from collections import deque
 
@@ -148,11 +148,15 @@ class VideoEditor:
                                                 method="compose")
 
     def fade_in_out_grayscale(self, fade_in_duration, fade_out_duration):
-        start_clip = self.video.subclip(0, fade_in_duration).fx(vfx.blackwhite).fadein(fade_in_duration)
+        start_clip = self.video.subclip(0, fade_in_duration).fx(vfx.blackwhite)
         medium_clip = self.video.subclip(fade_in_duration, self.video.duration - fade_out_duration)
-        end_clip = self.video.subclip(self.video.duration - fade_out_duration, self.video.duration).fx(vfx.blackwhite).fadeout(fade_out_duration)
+        end_clip = self.video.subclip(self.video.duration - fade_out_duration, self.video.duration).fx(vfx.blackwhite)
 
-        self.video = concatenate_videoclips([start_clip, medium_clip, end_clip])
+        self.video = CompositeVideoClip([start_clip,
+                                         medium_clip.set_start(start_clip.end - fade_in_duration)
+                                         .crossfadein(fade_in_duration),
+                                         end_clip.set_start(medium_clip.end - fade_out_duration)
+                                         .crossfadein(fade_out_duration)])
 
     def add_fade_in_out(self, fade_type, fade_in_duration, fade_out_duration):
         if fade_type == 'dark':
