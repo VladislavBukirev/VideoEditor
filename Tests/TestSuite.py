@@ -2,8 +2,8 @@ import unittest
 import sys
 import os
 from moviepy.editor import VideoFileClip, ImageClip
-sys.path.append(os.path.abspath(os.path.dirname(__file__)[:-6]))
 from VideoEditor import VideoEditor
+sys.path.append(os.path.abspath(os.path.dirname(__file__)[:-6]))
 
 
 class MyTestCase(unittest.TestCase):
@@ -92,6 +92,38 @@ class MyTestCase(unittest.TestCase):
         # Use the template
         self.editor.use_template(slot)
         self.assertEqual(self.editor.video.duration, self.video.duration / 4)
+
+    def test_add_fade_in_out_dark_time(self):
+        fade_in_duration = 3
+        fade_out_duration = 2
+        fade_type = "dark"
+
+        self.editor.add_fade_in_out(fade_type, fade_in_duration, fade_out_duration)
+
+        expected_video = self.video.fadein(fade_in_duration, (0, 0, 0)).fadeout(fade_out_duration, (0, 0, 0))
+        self.assertEqual(self.editor.video.duration, expected_video.duration)
+
+    def test_add_fade_in_out_light_time(self):
+        fade_in_duration = 3
+        fade_out_duration = 2
+        fade_type = "light"
+
+        self.editor.add_fade_in_out(fade_type, fade_in_duration, fade_out_duration)
+
+        expected_video = (
+            self.video.fadein(fade_in_duration, (255, 255, 255)).fadeout(fade_out_duration, (255, 255, 255)))
+        self.assertEqual(self.editor.video.duration, expected_video.duration)
+
+    def test_add_fade_in_out_grayscale_time(self):
+        fade_in_duration = 3
+        fade_out_duration = 2
+        fade_type = "grayscale"
+
+        start_video = self.editor.video
+
+        self.editor.add_fade_in_out(fade_type, fade_in_duration, fade_out_duration)
+
+        self.assertEqual(self.editor.video.duration, start_video.duration)
 
 
 if __name__ == '__main__':
