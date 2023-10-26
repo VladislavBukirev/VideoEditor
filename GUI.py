@@ -22,13 +22,10 @@ class Window(QWidget):
         p.setColor(QPalette.Window, Qt.black)
         self.setPalette(p)
 
-        # create media player object
         self.media_player = QMediaPlayer(None, QMediaPlayer.VideoSurface)
 
-        # create videowidget object
         videowidget = QVideoWidget()
 
-        # create open button
         open_button = QPushButton('Open Video')
         open_button.clicked.connect(self.open_file)
         open_button.setShortcut(QKeySequence("Ctrl+O"))
@@ -39,29 +36,23 @@ class Window(QWidget):
         edit_full_video = QPushButton('Edit full video')
         edit_full_video.clicked.connect(self.edit_full_video)
 
-        # create button for fade-in
         fade_in_button = QPushButton('Fade-in/Fade-out')
-        # fade_in_button.clicked.connect(lambda: self.add_fade_in_out('dark'))
 
         fade_layout = QHBoxLayout()
         fade_layout.addWidget(fade_in_button)
 
-        # create button for playing
         self.play_button = QPushButton()
         self.play_button.setEnabled(False)
         self.play_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
         self.play_button.clicked.connect(self.play_video)
 
-        # create slider
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setRange(0, 0)
         self.slider.sliderMoved.connect(self.set_position)
 
-        # create label
         self.label = QLabel()
         self.label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
 
-        # create buttons for video editing
         self.change_speed_button = QPushButton('Change Speed')
         self.change_speed_button.clicked.connect(self.change_speed)
 
@@ -80,7 +71,6 @@ class Window(QWidget):
         self.crop_button = QPushButton('Crop')
         self.crop_button.clicked.connect(self.crop_video)
 
-        # create hbox layout for video editing buttons
         edit_layout = QHBoxLayout()
         edit_layout.addWidget(self.change_speed_button)
         edit_layout.addWidget(self.cut_fragment_button)
@@ -89,7 +79,6 @@ class Window(QWidget):
         edit_layout.addWidget(self.rotate_button)
         edit_layout.addWidget(self.crop_button)
 
-        # create hbox layout
         hbox_layout = QHBoxLayout()
         hbox_layout.setContentsMargins(0, 0, 0, 0)
 
@@ -99,7 +88,6 @@ class Window(QWidget):
         hbox_layout.addWidget(self.play_button)
         hbox_layout.addWidget(self.slider)
 
-        # create vbox layout
         vbox_layout = QVBoxLayout()
         vbox_layout.addWidget(videowidget)
         vbox_layout.addLayout(hbox_layout)
@@ -109,7 +97,6 @@ class Window(QWidget):
 
         self.setLayout(vbox_layout)
 
-        # Create the fade menu
         fade_menu = QMenu(self)
         fade_menu.addAction("Dark", lambda: self.add_fade_in_out('dark'))
         fade_menu.addAction("Light", lambda: self.add_fade_in_out('light'))
@@ -117,8 +104,6 @@ class Window(QWidget):
         fade_in_button.setMenu(fade_menu)
 
         self.media_player.setVideoOutput(videowidget)
-
-        # media player signals
 
         self.media_player.stateChanged.connect(self.mediastate_changed)
         self.media_player.positionChanged.connect(self.position_changed)
@@ -167,12 +152,10 @@ class Window(QWidget):
         self.menu_bar.addAction(self.redo_button)
         self.menu_bar.setDisabled(True)
 
-        # Initialize VideoEditor
         self.video_editor = None
 
         self.show()
 
-        # Initialize VideoEditor
         self.video_editor = None
 
     def open_file(self):
@@ -182,7 +165,6 @@ class Window(QWidget):
             self.media_player.setMedia(QMediaContent(QUrl.fromLocalFile(filename)))
             self.play_button.setEnabled(True)
 
-            # Initialize VideoEditor
             self.video_editor = VideoEditor(filename)
             self.menu_bar.setEnabled(True)
 
@@ -206,19 +188,14 @@ class Window(QWidget):
 
     def change_speed(self):
         self.undo_button.setEnabled(True)
-        # Get speed value from the user
         speed, ok = QInputDialog.getDouble(self, "Change Speed", "Enter new speed:", value=1.0)
 
         if ok:
-            # Change speed with VideoEditor
             self.video_editor.change_speed(speed)
-
-            # Update media player with new video
             self.update_video_player()
 
     def cut_fragment(self):
         self.undo_button.setEnabled(True)
-        # Get start and end time values from the user
         start_time, ok1 = QInputDialog.getInt(self, "Cut Fragment",
                                               "Enter start time in seconds:",
                                               min=0,
@@ -229,22 +206,15 @@ class Window(QWidget):
                                             max=int(self.video_editor.video.duration))
 
         if ok1 and ok2:
-            # Cut fragment with VideoEditor
             self.video_editor.cut_fragment(start_time, end_time)
-
-            # Update media player with new video
             self.update_video_player()
-
-            # Reset slider and label
             self.reset_slider()
 
     def insert_image(self):
         self.undo_button.setEnabled(True)
-        # Get image file path from the user
         image_path, _ = QFileDialog.getOpenFileName(self, "Insert Image", "", "Image Files (*.jpg *.png)")
 
         if image_path:
-            # Get start time from the user
             start_time, ok1 = QInputDialog.getInt(self,
                                                   "Insert Image",
                                                   "Enter start time in seconds:",
@@ -257,32 +227,19 @@ class Window(QWidget):
                                                 max=int(self.video_editor.video.duration))
 
             if ok1 and ok2:
-                # Insert image with VideoEditor
                 self.video_editor.insert_image(image_path, start_time, end_time)
-                # Update media player with new video
                 self.update_video_player()
-
-                # Reset slider and label
                 self.reset_slider()
 
     def concatenate_videos(self):
-        # Get video paths from the user
         video1_path, _ = QFileDialog.getOpenFileName(self, "Select Video 1", "", "Video Files (*.mp4)")
         video2_path, _ = QFileDialog.getOpenFileName(self, "Select Video 2", "", "Video Files (*.mp4)")
 
         if video1_path and video2_path:
-            # Initialize VideoEditor for the first video
             self.video_editor = VideoEditor(video1_path)
-
-            # Concatenate the videos
             self.video_editor.concatenate_video([video1_path, video2_path])
-
-            # Update media player with the concatenated video
             self.update_video_player()
-
-            # Reset slider and label
             self.reset_slider()
-
             self.menu_bar.setEnabled(True)
 
     def reset_slider(self):
@@ -297,8 +254,6 @@ class Window(QWidget):
 
         if ok:
             self.video_editor.rotate_video(direction)
-
-            # Update media player with new video
             self.update_video_player()
 
     def crop_video(self):
@@ -310,8 +265,6 @@ class Window(QWidget):
 
         if ok1 and ok2 and ok3 and ok4:
             self.video_editor.crop_video(x1, y1, x2, y2)
-
-            # Update media player with new video
             self.update_video_player()
 
     def update_video_player(self):
@@ -349,7 +302,7 @@ class Window(QWidget):
 
     def choose_fragment(self):
         self.undo_button.setEnabled(True)
-        # Get start and end time values from the user
+
         start_time, ok1 = QInputDialog.getInt(self, "Choose Fragment",
                                               "Enter start time in seconds:",
                                               min=0,
@@ -360,13 +313,8 @@ class Window(QWidget):
                                             max=int(self.video_editor.video.duration))
 
         if ok1 and ok2:
-            # Cut fragment with VideoEditor
             self.video_editor.choose_fragment(start_time, end_time)
-
-            # Update media player with new video
             self.update_video_player()
-
-            # Reset slider and label
             self.reset_slider()
 
     def edit_full_video(self):

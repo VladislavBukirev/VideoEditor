@@ -1,7 +1,7 @@
 import unittest
 import sys
 import os
-from moviepy.editor import VideoFileClip, ImageClip
+from moviepy.editor import VideoFileClip
 from VideoEditor import VideoEditor
 sys.path.append(os.path.abspath(os.path.dirname(__file__)[:-6]))
 
@@ -84,12 +84,10 @@ class MyTestCase(unittest.TestCase):
     def test_use_template(self):
         slot = 0
 
-        # Create a template with a change_speed action
         self.editor.record_template(slot)
         self.editor.change_speed(2)
         self.editor.stop_recording()
 
-        # Use the template
         self.editor.use_template(slot)
         self.assertEqual(self.editor.video.duration, self.video.duration / 4)
 
