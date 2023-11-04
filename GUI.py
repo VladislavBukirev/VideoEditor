@@ -239,10 +239,8 @@ class Window(QWidget):
         if video1_path and video2_path:
             self.video_editor = VideoEditor(video1_path)
 
-            # Concatenate the videos
             self.video_editor.concatenate_video([video1_path, video2_path], smooth == QMessageBox.Yes)
 
-            # Update media player with the concatenated video
             self.update_video_player()
             self.reset_slider()
             self.menu_bar.setEnabled(True)
