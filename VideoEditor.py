@@ -1,6 +1,8 @@
-from moviepy.editor import VideoFileClip, concatenate_videoclips, ImageClip, CompositeVideoClip
-import moviepy.video.fx.all as vfx
 from collections import deque
+
+import moviepy.video.fx.all as vfx
+from json import dumps, loads
+from moviepy.editor import VideoFileClip, concatenate_videoclips, ImageClip, CompositeVideoClip
 
 
 class VideoEditor:
@@ -13,12 +15,12 @@ class VideoEditor:
         self._redo_stack = deque()
         self.undo_stack_length = 0
         self.redo_stack_length = 0
-        with open('templates.txt', 'r') as f:
+        with open('service_files/templates.json', 'r') as f:
             templates = f.read()
             if not templates:
                 self._template_list = [None] * 5
             else:
-                self._template_list = eval(templates)
+                self._template_list = loads(templates)
         self._template_is_recording = False
         self._current_slot = -1
 
@@ -32,10 +34,14 @@ class VideoEditor:
         self.try_record_actions(VideoEditor.cut_fragment, start_time, end_time)
         self.video = self.video.subclip(start_time, end_time)
 
-    def concatenate_video(self, video_paths):
+    def concatenate_video(self, video_paths, smooth=False):
         videos = [VideoFileClip(path) for path in video_paths]
-        concat_videos = concatenate_videoclips(videos, method='compose')
-        self.video = concat_videos
+        if not smooth:
+            concat_videos = concatenate_videoclips(videos, method='compose')
+            self.video = concat_videos
+        else:
+            video1, video2 = videos
+            self.video = CompositeVideoClip([video1, video2.set_start(video1.end-1).crossfadein(1)])
 
     def insert_image(self, image_path, start_time, end_time):
         self._change_undo_redo_stacks()
@@ -70,8 +76,8 @@ class VideoEditor:
 
     def stop_recording(self):
         self._template_is_recording = False
-        with open('templates.txt', 'w') as f:
-            f.write(str(self._template_list))
+        with open('service_files/templates.json', 'w') as f:
+            f.write(dumps(self._template_list))
 
     def record_template(self, slot):
         self._template_is_recording = True
@@ -153,9 +159,9 @@ class VideoEditor:
 
         self.video = CompositeVideoClip([start_clip,
                                          self.video.set_start(start_clip.end - fade_in_duration)
-                                         .crossfadein(fade_in_duration),
+                                        .crossfadein(fade_in_duration),
                                          end_clip.set_start(self.video.end - fade_out_duration)
-                                         .crossfadein(fade_out_duration)])
+                                        .crossfadein(fade_out_duration)])
 
     def add_fade_in_out(self, fade_type, fade_in_duration, fade_out_duration):
         if fade_type == 'dark':

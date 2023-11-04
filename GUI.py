@@ -5,12 +5,12 @@ from PyQt5.QtGui import QIcon, QPalette, QKeySequence
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QLabel, QSlider, QStyle, \
-    QSizePolicy, QFileDialog, QInputDialog, QMenuBar, QMenu, QAction
-from moviepy.video import fx
+    QSizePolicy, QFileDialog, QInputDialog, QMenuBar, QMenu, QAction, QMessageBox
 
 from VideoEditor import VideoEditor
 
 
+# noinspection PyUnresolvedReferences
 class Window(QWidget):
     def __init__(self):
         super().__init__()
@@ -199,10 +199,10 @@ class Window(QWidget):
         start_time, ok1 = QInputDialog.getInt(self, "Cut Fragment",
                                               "Enter start time in seconds:",
                                               min=0,
-                                              max=int(self.video_editor.video.duration-1))
+                                              max=int(self.video_editor.video.duration - 1))
         end_time, ok2 = QInputDialog.getInt(self, "Cut Fragment",
                                             "Enter end time in seconds:",
-                                            min=start_time+1,
+                                            min=start_time + 1,
                                             max=int(self.video_editor.video.duration))
 
         if ok1 and ok2:
@@ -219,7 +219,7 @@ class Window(QWidget):
                                                   "Insert Image",
                                                   "Enter start time in seconds:",
                                                   min=0,
-                                                  max=int(self.video_editor.video.duration-1))
+                                                  max=int(self.video_editor.video.duration - 1))
             end_time, ok2 = QInputDialog.getInt(self,
                                                 "Insert Image",
                                                 "Enter end time in seconds:",
@@ -234,10 +234,15 @@ class Window(QWidget):
     def concatenate_videos(self):
         video1_path, _ = QFileDialog.getOpenFileName(self, "Select Video 1", "", "Video Files (*.mp4)")
         video2_path, _ = QFileDialog.getOpenFileName(self, "Select Video 2", "", "Video Files (*.mp4)")
-
+        smooth = QMessageBox.question(self, 'Confirmation', 'Add smooth transition?',
+                                            QMessageBox.Yes | QMessageBox.No)
         if video1_path and video2_path:
             self.video_editor = VideoEditor(video1_path)
-            self.video_editor.concatenate_video([video1_path, video2_path])
+
+            # Concatenate the videos
+            self.video_editor.concatenate_video([video1_path, video2_path], smooth == QMessageBox.Yes)
+
+            # Update media player with the concatenated video
             self.update_video_player()
             self.reset_slider()
             self.menu_bar.setEnabled(True)
@@ -268,7 +273,7 @@ class Window(QWidget):
             self.update_video_player()
 
     def update_video_player(self):
-        output_path = "temp_output.mp4"
+        output_path = "service_files/temp_output.mp4"
         self.media_player.setMedia(QMediaContent(QUrl.fromLocalFile(self.video_editor.file_path)))
         self.video_editor.save_video(output_path)
         self.media_player.setMedia(QMediaContent(QUrl.fromLocalFile(output_path)))

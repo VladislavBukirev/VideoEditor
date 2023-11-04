@@ -1,8 +1,11 @@
-import unittest
-import sys
 import os
+import sys
+import unittest
+
 from moviepy.editor import VideoFileClip
+
 from VideoEditor import VideoEditor
+
 sys.path.append(os.path.abspath(os.path.dirname(__file__)[:-6]))
 
 
